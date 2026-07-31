@@ -102,7 +102,7 @@ lines:
 3. Should word-level `vocalist` overrides be possible, or is line granularity
    enough for 1.0?
 
-This pairs with the sections proposal (ISSUE_A_URL) — together they cover the
+This pairs with the sections proposal (https://github.com/tranxuanthang/lyricsfile/issues/2) — together they cover the
 "richer structure" direction you mentioned in issue #1, and a section's lines
 can each carry their own vocalist. Drafted spec text and a full example are on
 the same branch:
