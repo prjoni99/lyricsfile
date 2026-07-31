@@ -1,0 +1,42 @@
+version: '1.0'
+
+metadata:
+  title: 'Meet Me Halfway There'
+  artist: 'Ada Vale & Rio March'
+  duration_ms: 185000
+  language: 'en'
+  vocalists:
+    - id: ada
+      name: 'Ada Vale'
+      type: person
+    - id: rio
+      name: 'Rio March'
+      type: person
+    - id: both
+      name: 'Ada Vale & Rio March'
+      type: group
+
+lines:
+  - text: 'I took the early train alone'
+    start_ms: 15000
+    end_ms: 19000
+    vocalist: ada
+  - text: 'I waited by the station stone'
+    start_ms: 19500
+    end_ms: 23500
+    vocalist: rio
+  - text: 'Meet me halfway there'
+    start_ms: 24000
+    end_ms: 29000
+    vocalist: both
+  - text: '(halfway there)'
+    start_ms: 27000
+    end_ms: 29500
+    vocalist: ada
+    role: background
+
+plain: |
+  I took the early train alone
+  I waited by the station stone
+  Meet me halfway there
+  (halfway there)
