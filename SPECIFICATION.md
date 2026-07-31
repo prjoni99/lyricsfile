@@ -27,6 +27,7 @@ avoid YAML anchors and aliases for now.
 | `metadata` | mapping | Yes | Information about the track and lyrics. |
 | `lines` | sequence | No | Synchronized lyric lines. |
 | `plain` | string | No | Unsynchronized lyrics with preserved line breaks. |
+| `sections` | sequence | No | Song structure markers on their own timeline. |
 
 A non-instrumental file should contain at least one of `lines` or `plain`.
 An empty `lines` sequence is equivalent to having no synchronized lines.
@@ -42,6 +43,7 @@ An empty `lines` sequence is equivalent to having no synchronized lines.
 | `offset_ms` | integer | No | Global timing offset; exact application is unresolved. |
 | `language` | string | No | Primary lyrics language as an ISO 639-1 code. |
 | `instrumental` | boolean | No | Whether the track has no vocal lyrics. Defaults to `false`. |
+| `vocalists` | sequence | No | Vocalists that lines can reference by id. |
 
 `duration_ms` must not be negative.
 
@@ -60,6 +62,8 @@ Each item in `lines` must be a mapping with these fields:
 | `start_ms` | integer | Yes | Start time in milliseconds. |
 | `end_ms` | integer | No | End time in milliseconds. |
 | `words` | sequence | No | Word- or segment-level synchronization. |
+| `vocalist` | string | No | Id of a declared vocalist singing this line. |
+| `role` | string | No | `lead` or `background`. Defaults to `lead`. |
 
 `start_ms` must not be negative. When present, `end_ms` must be greater than or
 equal to `start_ms`.
@@ -107,7 +111,64 @@ style.
 
 Readers must not assume that `plain` and `lines` contain exactly the same text.
 
-## 7. Timing And Rendering
+## 7. Song Sections
+
+`sections` is an optional top-level sequence that describes song structure on
+its own timeline. It does not change how `lines` are read, and readers that do
+not support sections can ignore the field entirely.
+
+Each item in `sections` must be a mapping with these fields:
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `kind` | string | Yes | Section type. One of `intro`, `verse`, `pre-chorus`, `chorus`, `post-chorus`, `bridge`, `refrain`, `instrumental`, `outro`, or `other`. |
+| `label` | string | No | Freeform display text, such as `Verse 2` or `Sax solo`. |
+| `start_ms` | integer | Yes | Start time in milliseconds. |
+| `end_ms` | integer | No | End time in milliseconds. |
+
+`start_ms` must not be negative. When present, `end_ms` must be greater than
+or equal to `start_ms`.
+
+Readers must treat an unknown `kind` as `other`. This lets future revisions
+add kinds without breaking existing readers. Renderers should show `label`
+when present, and may otherwise show a default name for the `kind`.
+
+Writers should order sections by `start_ms`. Sections should not overlap.
+
+Instrumental passages inside a vocal track belong here as `instrumental`
+sections rather than as entries in `lines`.
+
+## 8. Vocalists And Roles
+
+`metadata.vocalists` is an optional sequence that declares who sings. Lines
+reference a vocalist by id using the line fields defined in section 4. Files
+without vocalists remain valid, and readers that do not support vocalists can
+ignore these fields.
+
+Each item in `metadata.vocalists` must be a mapping with these fields:
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string | Yes | Unique key that lines reference. |
+| `name` | string | No | Display name. |
+| `type` | string | No | `person`, `group`, or `other`. Defaults to `person`. |
+
+Vocalist ids must be unique within a file.
+
+A line's `vocalist` field takes a single id. When several vocalists sing the
+same line together, declare a vocalist with type `group` and reference it.
+When different parts are sung at the same time, use overlapping lines, each
+with its own `vocalist`.
+
+Background vocals are ordinary lines with `role: background`, usually
+overlapping a lead line. Renderers may style them differently, for example
+smaller or dimmed.
+
+A `vocalist` value that does not match a declared id is a semantic error, not
+a structural one. Readers should warn and render the line without
+attribution.
+
+## 9. Timing And Rendering
 
 All timestamps are integer milliseconds from the start of the audio track.
 
@@ -117,7 +178,7 @@ the same time.
 Rendering layout, animation, colors, and end-time inference are outside the
 scope of this draft.
 
-## 8. Version Handling
+## 10. Version Handling
 
 For this draft, `version` must be the exact string `"1.0"`.
 
@@ -126,7 +187,7 @@ file or preserve it without displaying it.
 
 How version 1.0 can grow without breaking readers is still being discussed.
 
-## 9. Example
+## 11. Example
 
 ```yaml
 version: '1.0'
@@ -155,7 +216,7 @@ plain: |
 
 Additional examples are available in [`examples/`](examples/).
 
-## 10. Implementation Notes
+## 12. Implementation Notes
 
 - Parse YAML with safe loading enabled.
 - Reject duplicate keys rather than choosing one value silently.
